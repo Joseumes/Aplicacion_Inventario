@@ -1,0 +1,103 @@
+CREATE DATABASE IF NOT EXISTS facturacion;
+USE facturacion;
+
+
+CREATE TABLE salidas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    producto_id INT NOT NULL,
+    cantidad INT NOT NULL,
+    fecha DATETIME NOT NULL,
+    usuario_id INT NOT NULL,
+    FOREIGN KEY (producto_id) REFERENCES productos(id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+
+select * from salidas;
+
+CREATE TABLE usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(50) UNIQUE NOT NULL,
+    clave VARCHAR(100) NOT NULL,
+    rol ENUM('gerente', 'encargado') NOT NULL
+);
+
+CREATE TABLE productos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    codigo VARCHAR(20) UNIQUE NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL
+);
+
+select * from productos 
+
+CREATE TABLE facturas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    numero_factura VARCHAR(50) NOT NULL,
+    cliente_nombre VARCHAR(100),
+    cliente_nit VARCHAR(20),
+    fecha DATETIME NOT NULL,
+    subtotal DECIMAL(10,2),
+    impuesto DECIMAL(10,2),
+    total DECIMAL(10,2),
+    usuario_id INT,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+
+
+-- Datos de ejemplo
+INSERT INTO usuarios (usuario, clave, rol) VALUES
+('admin', 'admin123', 'gerente'),
+('empleado1', 'clave123', 'encargado');
+
+INSERT INTO productos (codigo, nombre, precio, stock) VALUES
+('P001', 'Monitor LG', 125.50, 10),
+('P002', 'Teclado Logitech', 35.00, 50),
+('P003', 'Mouse Óptico', 20.75, 30);
+
+select * from productos
+
+CREATE TABLE compras (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    proveedor VARCHAR(100),
+    monto_total DECIMAL(10,2),
+    fecha_compra DATETIME NOT NULL
+);
+
+CREATE TABLE entradas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    producto_id INT NOT NULL,
+    cantidad INT NOT NULL,
+    fecha DATETIME NOT NULL,
+    proveedor VARCHAR(100),
+    usuario_id INT NOT NULL,
+    FOREIGN KEY (producto_id) REFERENCES productos(id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+
+
+SELECT 
+    p.nombre AS producto,
+    SUM(fd.cantidad) AS cantidad_vendida,
+    SUM(fd.subtotal) AS total_vendido
+FROM factura_detalles fd
+JOIN facturas f ON fd.factura_id = f.id
+JOIN productos p ON fd.producto_id = p.id
+WHERE DATE(f.fecha) = CURDATE()
+GROUP BY p.id, p.nombre;7
+
+
+CREATE TABLE IF NOT EXISTS gastos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    descripcion VARCHAR(255) NOT NULL,
+    monto DECIMAL(10,2) NOT NULL,
+    fecha_gasto DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    responsable VARCHAR(100) NOT NULL
+);
+
+drop table gastos
+
+select * from gastos
+
+
+SELECT COALESCE(SUM(monto), 0) FROM gastos
